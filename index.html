@@ -213,14 +213,19 @@
         /* Main Section Grid */
         .main-grid {
             display: grid;
-            grid-template-columns: 360px 1fr;
+            grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
             gap: 1.5rem;
             margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .main-grid > * {
+            min-width: 0;
         }
 
         @media (max-width: 1024px) {
             .main-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
             }
         }
 
@@ -284,10 +289,16 @@
 
         .range-inputs {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: 0.5rem;
             width: 100%;
             min-width: 0;
+            overflow: hidden;
+        }
+
+        .range-inputs .form-control {
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .btn {

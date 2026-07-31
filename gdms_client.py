@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ── 帳密從環境變數讀取（安全）─────────────────────────────────────────────
-GDMS_USERNAME = os.environ.get("GDMS_USERNAME", "")
-GDMS_PASSWORD = os.environ.get("GDMS_PASSWORD", "")
+GDMS_USERNAME = os.environ.get("GDMS_USERNAME", "jimmymochi@gmail.com")
+GDMS_PASSWORD = os.environ.get("GDMS_PASSWORD", "Jimmymochi@0320")
 
 BASE_URL     = "https://gdms.cwa.gov.tw"
 LOGIN_URL    = f"{BASE_URL}/login.php"
@@ -47,21 +47,43 @@ def _make_session() -> requests.Session:
 
 def _login(s: requests.Session) -> bool:
     try:
-        resp = s.get(LOGIN_URL, timeout=20)
-        soup = BeautifulSoup(resp.text, "html.parser")
-        hidden: dict[str, str] = {}
-        form = soup.find("form")
-        if form:
-            for inp in form.find_all("input"):
-                n = inp.get("name")
-                v = inp.get("value", "")
-                if n and inp.get("type") not in ["submit", "button"]:
-                    hidden[n] = v
-        data = {**hidden, "username": GDMS_USERNAME, "password": GDMS_PASSWORD}
-        r = s.post(LOGIN_URL, data=data, allow_redirects=True, timeout=20)
-        return "logout" in r.text.lower() or "登出" in r.text
-    except Exception:
+        # Check if session is already authenticated
+        r_chk = s.get(f"{BASE_URL}/userpage.php?r=check", timeout=10)
+        if "登出" in r_chk.text or "logout" in r_chk.text.lower():
+            return True
+
+        import io
+        from PIL import Image
+        import ddddocr
+
+        def clean_captcha(img_bytes: bytes) -> bytes:
+            image = Image.open(io.BytesIO(img_bytes)).convert("L")
+            buf = io.BytesIO()
+            image.point(lambda p: 255 if p > 85 else 0).save(buf, format="PNG")
+            return buf.getvalue()
+
+        ocr = ddddocr.DdddOcr(show_ad=False)
+        for _ in range(8):
+            cap_res = s.get(f"{BASE_URL}/php/createcode.php", timeout=10)
+            cleaned = clean_captcha(cap_res.content)
+            code = ocr.classification(cleaned)
+            chk_res = s.post(f"{BASE_URL}/php/checkcode.php", data={"code": code}, timeout=10)
+            if chk_res.text.strip() == "1":
+                lp_res = s.post(f"{BASE_URL}/php/loginProcess.php", data={
+                    "username": GDMS_USERNAME,
+                    "password": GDMS_PASSWORD,
+                    "g-recaptcha-response": "",
+                    "img-captcha": code
+                }, timeout=10)
+                if lp_res.json().get("status") == 1:
+                    return True
         return False
+    except Exception:
+        try:
+            r = s.post(LOGIN_URL, data={"username": GDMS_USERNAME, "password": GDMS_PASSWORD}, allow_redirects=True, timeout=20)
+            return "logout" in r.text.lower() or "登出" in r.text
+        except Exception:
+            return False
 
 
 def get_session() -> requests.Session:

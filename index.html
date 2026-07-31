@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDMS Taiwan 台灣地震與地球物理資料管理系統</title>
+    <meta name="description" content="GDMS Taiwan 台灣地震資料查詢與波形下載系統，結合氣象署 (CWA) 與中研院地球所 (IES) 觀測網路數據。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Interactive Earthquake Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: #131b2e;
+            --bg-card-hover: #1c2742;
+            --border-color: #243252;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-cyan: #38bdf8;
+            --accent-blue: #3b82f6;
+            --accent-indigo: #6366f1;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --shadow-glow: 0 0 25px rgba(56, 189, 248, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Ambient background glow */
+        .ambient-glow {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 60%, rgba(99, 102, 241, 0.08) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header / Navbar */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 2rem;
+            background: rgba(19, 27, 46, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .brand-title h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-title p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(36, 50, 82, 0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-emerald);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .user-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--card-color, var(--accent-cyan)), transparent);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-top: 0.4rem;
+        }
+
+        .stat-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        /* Main Section Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Filter Panel */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .form-control, .form-select {
+            background: #0b111e;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.65rem 0.85rem;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        .range-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(36, 50, 82, 0.6);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(36, 50, 82, 0.9);
+        }
+
+        /* Map & Visualization Container */
+        .content-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        #map {
+            height: 480px;
+            width: 100%;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* Table View */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 400px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        th {
+            background: #0b111e;
+            color: var(--accent-cyan);
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(36, 50, 82, 0.4);
+            color: var(--text-primary);
+        }
+
+        tr:hover td {
+            background: var(--bg-card-hover);
+        }
+
+        .badge-ml {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        .ml-high { background: rgba(244, 63, 94, 0.2); color: var(--accent-rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+        .ml-mid { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .ml-low { background: rgba(56, 189, 248, 0.2); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.3); }
+
+        /* Waveform Simulator Canvas */
+        .waveform-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        canvas#waveformCanvas {
+            width: 100%;
+            height: 180px;
+            background: #070a12;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 3rem;
+        }
+
+        footer a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-earth-asia"></i>
+                </div>
+                <div class="brand-title">
+                    <h1>GDMS Taiwan Explorer</h1>
+                    <p>台灣地震與地球物理資料管理系統 (CWA GDMS)</p>
+                </div>
+            </div>
+            <div class="user-status">
+                <div class="status-dot"></div>
+                <span class="user-name">陳柏亘 (jimmymochi)</span>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card" style="--card-color: var(--accent-cyan);">
+                <div class="stat-label">
+                    <i class="fa-solid fa-tower-cell"></i> CWASN 地震波網
+                </div>
+                <div class="stat-value">152 站</div>
+                <div class="stat-desc">氣象署即時寬頻地震網</div>
+            </div>
+            <div class="stat-card" style="--card-color: var(--accent-indigo);">
+                <div class="stat-label">
+                    <i class="fa-solid fa-satellite-dish"></i> TSMIP 強震網
+                </div>
+                <div class="stat-value">533 站</div>
+                <div class="stat-desc">自由場與自由波形檢測</div>
+            </div>
+            <div class="stat-card" style="--card-color: var(--accent-emerald);">
+                <div class="stat-label">
+                    <i class="fa-solid fa-location-crosshairs"></i> GNSS 衛星定位
+                </div>
+                <div class="stat-value">191 站</div>
+                <div class="stat-desc">地殼變形與同震位移監測</div>
+            </div>
+            <div class="stat-card" style="--card-color: var(--accent-amber);">
+                <div class="stat-label">
+                    <i class="fa-solid fa-droplet"></i> 地下水與地磁網
+                </div>
+                <div class="stat-value">26 站</div>
+                <div class="stat-desc">GW 地下水位與同震響應</div>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="main-grid">
+            <!-- Filter Panel -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fa-solid fa-sliders"></i> 地震目錄篩選條件
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-regular fa-calendar"></i> 起始日期</label>
+                    <input type="date" id="stdate" class="form-control" value="2026-01-01">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-regular fa-calendar"></i> 結束日期</label>
+                    <input type="date" id="eddate" class="form-control" value="2026-06-30">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-gauge-high"></i> 規模範圍 (ML)</label>
+                    <div class="range-inputs">
+                        <input type="number" id="minMl" class="form-control" placeholder="Min (3.0)" value="4.0" step="0.1">
+                        <input type="number" id="maxMl" class="form-control" placeholder="Max (8.0)" value="7.5" step="0.1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-arrows-down-to-line"></i> 深度範圍 (km)</label>
+                    <div class="range-inputs">
+                        <input type="number" id="minDep" class="form-control" placeholder="Min (0)" value="0">
+                        <input type="number" id="maxDep" class="form-control" placeholder="Max (150)" value="100">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-network-wired"></i> 觀測網路</label>
+                    <select id="networkSelect" class="form-select">
+                        <option value="CWASN">CWASN - 氣象署地震網 (152站)</option>
+                        <option value="TSMIP">TSMIP - 強震儀觀測網 (533站)</option>
+                        <option value="GNSS">GNSS - 衛星連續觀測網 (191站)</option>
+                        <option value="GW">GW - 地下水地震觀測網 (6站)</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" id="btnQuery">
+                    <i class="fa-solid fa-magnifying-glass"></i> 查詢目錄資料
+                </button>
+                <button class="btn btn-secondary" id="btnDownloadMseed">
+                    <i class="fa-solid fa-download"></i> 下載波形範例 (.mseed)
+                </button>
+            </div>
+
+            <!-- Content Area: Map & Table -->
+            <div class="content-container">
+                <!-- Interactive Leaflet Map -->
+                <div id="map"></div>
+
+                <!-- Table Card -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="panel-title" style="border:none; padding:0;">
+                            <i class="fa-solid fa-list"></i> 地震事件目錄清單
+                        </div>
+                        <span id="eventCount" style="font-size:0.85rem; color:var(--accent-cyan); font-weight:600;">已載入 6 筆地震事件</span>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>事件 ID</th>
+                                    <th>日期 (UTC)</th>
+                                    <th>時間 (UTC)</th>
+                                    <th>規模 (ML)</th>
+                                    <th>深度 (km)</th>
+                                    <th>緯度</th>
+                                    <th>經度</th>
+                                </tr>
+                            </thead>
+                            <tbody id="catalogTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Waveform Visualizer -->
+        <div class="waveform-card">
+            <div class="table-header">
+                <div class="panel-title" style="border:none; padding:0;">
+                    <i class="fa-solid fa-wave-square"></i> CWASN 三分量地震波形模擬與即時顯示 (EHZ / EHN / EHE)
+                </div>
+                <span style="font-size:0.8rem; color:var(--text-secondary);">模擬訊號取樣率: 100 Hz</span>
+            </div>
+            <canvas id="waveformCanvas"></canvas>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>GDMS Taiwan 台灣地震與地球物理資料管理系統 Web App · 資料來源：<a href="https://gdms.cwa.gov.tw" target="_blank">CWA GDMS</a> (DOI: <a href="https://doi.org/10.7914/SN/T5" target="_blank">10.7914/SN/T5</a>)</p>
+            <p style="margin-top:0.4rem; color:var(--text-muted);">GitHub Repository: <a href="https://github.com/jimmymochi/gdms-taiwan" target="_blank">jimmymochi/gdms-taiwan</a></p>
+        </footer>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // Sample recent June 2026 CWA events from GDMS catalog
+        const juneEvents = [
+            { id: 1749428, date: "2026-06-14", time: "03:15:04.47", ml: 4.66, lat: 24.5385, lon: 121.6432, depth: 15.2 },
+            { id: 1749403, date: "2026-06-13", time: "10:26:39.49", ml: 4.53, lat: 24.0757, lon: 122.2998, depth: 22.4 },
+            { id: 1749355, date: "2026-06-11", time: "18:57:18.71", ml: 4.52, lat: 23.2443, lon: 122.1892, depth: 31.0 },
+            { id: 1749347, date: "2026-06-11", time: "10:35:59.25", ml: 4.06, lat: 21.3063, lon: 121.2593, depth: 45.1 },
+            { id: 1749236, date: "2026-06-07", time: "17:13:44.58", ml: 4.40, lat: 23.9530, lon: 121.7557, depth: 18.6 },
+            { id: 1749164, date: "2026-06-05", time: "00:21:19.33", ml: 4.11, lat: 24.0303, lon: 122.3892, depth: 28.9 }
+        ];
+
+        // Initialize Map centered on Taiwan
+        const map = L.map('map').setView([23.7, 121.0], 7);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Render Table & Map Markers
+        function renderData(events) {
+            const tbody = document.getElementById('catalogTableBody');
+            tbody.innerHTML = '';
+            
+            // Clear existing markers
+            map.eachLayer(layer => {
+                if (layer instanceof L.CircleMarker) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            events.forEach(ev => {
+                // Table Row
+                const tr = document.createElement('tr');
+                const mlClass = ev.ml >= 4.5 ? 'ml-high' : (ev.ml >= 4.2 ? 'ml-mid' : 'ml-low');
+                
+                tr.innerHTML = `
+                    <td><strong>#${ev.id}</strong></td>
+                    <td>${ev.date}</td>
+                    <td>${ev.time}</td>
+                    <td><span class="badge-ml ${mlClass}">ML ${ev.ml.toFixed(2)}</span></td>
+                    <td>${ev.depth}</td>
+                    <td>${ev.lat.toFixed(4)}</td>
+                    <td>${ev.lon.toFixed(4)}</td>
+                `;
+                tbody.appendChild(tr);
+
+                // Map Marker
+                const markerColor = ev.ml >= 4.5 ? '#f43f5e' : (ev.ml >= 4.2 ? '#f59e0b' : '#38bdf8');
+                const circle = L.circleMarker([ev.lat, ev.lon], {
+                    radius: (ev.ml - 3.5) * 8,
+                    color: markerColor,
+                    fillColor: markerColor,
+                    fillOpacity: 0.6,
+                    weight: 2
+                }).addTo(map);
+
+                circle.bindPopup(`
+                    <div style="color:#0f172a; font-family:sans-serif;">
+                        <h4 style="margin:0 0 5px; color:#0284c7;"><strong>地震事件 #${ev.id}</strong></h4>
+                        <p style="margin:2px 0;"><b>發震時間:</b> ${ev.date} ${ev.time}</p>
+                        <p style="margin:2px 0;"><b>地震規模:</b> ML ${ev.ml}</p>
+                        <p style="margin:2px 0;"><b>震源深度:</b> ${ev.depth} km</p>
+                        <p style="margin:2px 0;"><b>座標:</b> ${ev.lat}°N, ${ev.lon}°E</p>
+                    </div>
+                `);
+            });
+
+            document.getElementById('eventCount').innerText = `已載入 ${events.length} 筆地震事件`;
+        }
+
+        renderData(juneEvents);
+
+        // Filter Action
+        document.getElementById('btnQuery').addEventListener('click', () => {
+            const minMl = parseFloat(document.getElementById('minMl').value) || 0;
+            const maxMl = parseFloat(document.getElementById('maxMl').value) || 10;
+            
+            const filtered = juneEvents.filter(ev => ev.ml >= minMl && ev.ml <= maxMl);
+            renderData(filtered);
+        });
+
+        document.getElementById('btnDownloadMseed').addEventListener('click', () => {
+            alert("正在觸發 CWASN 樣品波形檔案下載 (20260501123955_CWASN.mseed - 137.1 MB)");
+        });
+
+        // Animated Waveform Canvas
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth - 48;
+            canvas.height = 180;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let phase = 0;
+        function drawWaveform() {
+            ctx.fillStyle = '#070a12';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Grid Lines
+            ctx.strokeStyle = 'rgba(36, 50, 82, 0.4)';
+            ctx.lineWidth = 1;
+
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+
+            // Draw Seismic Waveform
+            ctx.beginPath();
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 1.8;
+
+            const midY = canvas.height / 2;
+            const width = canvas.width;
+
+            for (let x = 0; x < width; x++) {
+                const t = (x + phase) * 0.02;
+                // Envelope simulating P-wave and S-wave arrival
+                let amp = Math.sin(t * 0.5) * 5;
+                if (x > width * 0.3 && x < width * 0.7) {
+                    const envelope = Math.sin((x - width * 0.3) / (width * 0.4) * Math.PI);
+                    amp += Math.sin(t * 8) * 35 * envelope + Math.cos(t * 18) * 20 * envelope;
+                }
+
+                const y = midY + amp;
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            phase += 2;
+            requestAnimationFrame(drawWaveform);
+        }
+
+        drawWaveform();
+    </script>
+</body>
+</html>

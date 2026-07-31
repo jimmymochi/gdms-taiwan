@@ -444,6 +444,151 @@
             color: var(--accent-cyan);
             text-decoration: none;
         }
+        /* Download action buttons in table */
+        .btn-dl {
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--accent-cyan);
+            padding: 0.28rem 0.55rem;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-right: 0.25rem;
+            vertical-align: middle;
+        }
+        .btn-dl:hover {
+            background: rgba(56, 189, 248, 0.28);
+            transform: translateY(-1px);
+        }
+        .btn-dl.btn-usgs {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: rgba(99, 102, 241, 0.3);
+            color: var(--accent-indigo);
+        }
+        .btn-dl.btn-usgs:hover { background: rgba(99, 102, 241, 0.28); }
+
+        /* Live data source bar */
+        .data-source-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .live-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            padding: 0.15rem 0.55rem;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+        .loading-row td {
+            text-align: center;
+            color: var(--accent-cyan);
+            padding: 2.5rem;
+        }
+
+        /* Download Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2rem;
+            max-width: 580px;
+            width: 100%;
+            box-shadow: 0 0 60px rgba(56, 189, 248, 0.18);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-close {
+            position: absolute;
+            top: 1rem; right: 1rem;
+            background: rgba(36, 50, 82, 0.6);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .modal-close:hover { background: var(--accent-rose); color: #fff; border-color: var(--accent-rose); }
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+            padding-right: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .modal-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.65rem;
+            margin-bottom: 1.4rem;
+        }
+        .info-item {
+            background: rgba(11, 17, 30, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.6rem 0.85rem;
+        }
+        .info-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .info-value { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); }
+        .dl-section { margin-bottom: 1rem; }
+        .dl-section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .cmd-block {
+            background: #050810;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.76rem;
+            color: #4ade80;
+            word-break: break-all;
+            line-height: 1.6;
+        }
+        .dl-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -544,11 +689,11 @@
                 </div>
 
                 <button class="btn btn-primary" id="btnQuery">
-                    <i class="fa-solid fa-magnifying-glass"></i> 查詢目錄資料
+                    <i class="fa-solid fa-magnifying-glass"></i> 查詢即時地震資料
                 </button>
-                <button class="btn btn-secondary" id="btnDownloadMseed">
-                    <i class="fa-solid fa-download"></i> 下載波形範例 (.mseed)
-                </button>
+                <p style="font-size:0.73rem; color:var(--text-muted); text-align:center; line-height:1.5;">
+                    <i class="fa-solid fa-circle-info"></i> 資料來自 <strong style="color:var(--accent-cyan);">USGS FDSN</strong>，每次查詢即時向 USGS 拉取最新資料
+                </p>
             </div>
 
             <!-- Content Area: Map & Table -->
@@ -562,7 +707,13 @@
                         <div class="panel-title" style="border:none; padding:0;">
                             <i class="fa-solid fa-list"></i> 地震事件目錄清單
                         </div>
-                        <span id="eventCount" style="font-size:0.85rem; color:var(--accent-cyan); font-weight:600;">已載入 6 筆地震事件</span>
+                        <div style="text-align:right;">
+                            <span id="eventCount" style="font-size:0.85rem; color:var(--accent-cyan); font-weight:600; display:block;">查詢中...</span>
+                            <div class="data-source-bar" style="justify-content:flex-end; margin-top:0.25rem;">
+                                <span class="live-badge">LIVE</span>
+                                <span id="dataSource">USGS FDSN</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="table-wrapper">
@@ -572,10 +723,11 @@
                                     <th>事件 ID</th>
                                     <th>日期 (UTC)</th>
                                     <th>時間 (UTC)</th>
-                                    <th>規模 (ML)</th>
-                                    <th>深度 (km)</th>
+                                    <th>規模</th>
+                                    <th>深度</th>
                                     <th>緯度</th>
                                     <th>經度</th>
+                                    <th>操作</th>
                                 </tr>
                             </thead>
                             <tbody id="catalogTableBody">
@@ -605,105 +757,303 @@
         </footer>
     </div>
 
+
+    <!-- Download Modal -->
+    <div class="modal-overlay" id="downloadModal" onclick="if(event.target===this)closeDownloadModal()">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeDownloadModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title">
+                <i class="fa-solid fa-satellite-dish" style="color:var(--accent-cyan);"></i>
+                下載 CWASN 地震波形
+            </div>
+
+            <div class="modal-info-grid">
+                <div class="info-item">
+                    <div class="info-label">事件 ID</div>
+                    <div class="info-value" id="dlEventId" style="font-size:0.78rem; word-break:break-all;"></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">發震時間 (UTC)</div>
+                    <div class="info-value" id="dlTime" style="font-size:0.78rem;"></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">地震規模</div>
+                    <div class="info-value" id="dlMag" style="color:var(--accent-amber);"></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">震源深度</div>
+                    <div class="info-value" id="dlDepth"></div>
+                </div>
+            </div>
+
+            <div class="dl-section">
+                <div class="dl-section-title"><i class="fa-solid fa-globe"></i> 方法一：前往 CWA GDMS 網頁下載</div>
+                <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.6rem;">需先登入 GDMS，可選擇 CWASN / TSMIP 觀測網路與站點範圍</p>
+                <a id="dlGdmsBtn" href="https://gdms.cwa.gov.tw/eqDownload.php" target="_blank"
+                   style="display:flex; justify-content:center; align-items:center; gap:0.5rem;
+                          background:linear-gradient(135deg,var(--accent-cyan),var(--accent-blue));
+                          color:#fff; padding:0.7rem 1.25rem; border-radius:12px;
+                          text-decoration:none; font-weight:600; font-size:0.85rem;
+                          box-shadow:0 4px 15px rgba(56,189,248,0.25);">
+                    <i class="fa-solid fa-external-link-alt"></i> 開啟 GDMS 波形下載頁面
+                </a>
+            </div>
+
+            <div class="dl-section">
+                <div class="dl-section-title"><i class="fa-brands fa-python"></i> 方法二：本機 gdms_client.py 指令</div>
+                <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem;">
+                    在 <code style="color:var(--accent-cyan); background:#0b111e; padding:1px 5px; border-radius:4px;">gdms-taiwan/</code> 目錄下執行：
+                </p>
+                <div class="cmd-block" id="dlPyCmd"></div>
+            </div>
+
+            <div class="dl-buttons">
+                <button id="copyBtn" onclick="copyPyCmd()" class="btn btn-secondary">
+                    <i class="fa-solid fa-copy"></i> 複製指令
+                </button>
+                <a id="dlUsgsLink" href="#" target="_blank" class="btn btn-secondary"
+                   style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+                    <i class="fa-solid fa-database"></i> USGS 事件詳情
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        // Sample recent June 2026 CWA events from GDMS catalog
-        const juneEvents = [
-            { id: 1749428, date: "2026-06-14", time: "03:15:04.47", ml: 4.66, lat: 24.5385, lon: 121.6432, depth: 15.2 },
-            { id: 1749403, date: "2026-06-13", time: "10:26:39.49", ml: 4.53, lat: 24.0757, lon: 122.2998, depth: 22.4 },
-            { id: 1749355, date: "2026-06-11", time: "18:57:18.71", ml: 4.52, lat: 23.2443, lon: 122.1892, depth: 31.0 },
-            { id: 1749347, date: "2026-06-11", time: "10:35:59.25", ml: 4.06, lat: 21.3063, lon: 121.2593, depth: 45.1 },
-            { id: 1749236, date: "2026-06-07", time: "17:13:44.58", ml: 4.40, lat: 23.9530, lon: 121.7557, depth: 18.6 },
-            { id: 1749164, date: "2026-06-05", time: "00:21:19.33", ml: 4.11, lat: 24.0303, lon: 122.3892, depth: 28.9 }
-        ];
+        // ─── USGS FDSN API (免認證，CORS 友善) ───────────────────────────────
+        const USGS_BASE = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
+        let allEvents = [];
+        let currentEventUrl = '';
 
-        // Initialize Map centered on Taiwan
+        // Initialize Map
         const map = L.map('map').setView([23.7, 121.0], 7);
-
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 19
+            subdomains: 'abcd', maxZoom: 19
         }).addTo(map);
+        let markerLayerGroup = L.layerGroup().addTo(map);
 
-        // Render Table & Map Markers
+        // ─── 從 USGS 拉取即時地震資料 ──────────────────────────────────────────
+        async function fetchUSGS() {
+            const stDate = document.getElementById('stdate').value;
+            const edDate = document.getElementById('eddate').value;
+            const minMl  = parseFloat(document.getElementById('minMl').value)  || 3.0;
+            const maxMl  = parseFloat(document.getElementById('maxMl').value)  || 9.9;
+            const minDep = parseFloat(document.getElementById('minDep').value) || 0;
+            const maxDep = parseFloat(document.getElementById('maxDep').value) || 300;
+
+            const params = new URLSearchParams({
+                format: 'geojson',
+                starttime: stDate,
+                endtime: edDate,
+                minmagnitude: minMl,
+                maxmagnitude: maxMl,
+                mindepth: minDep,
+                maxdepth: maxDep,
+                minlatitude: 20,
+                maxlatitude: 27,
+                minlongitude: 117,
+                maxlongitude: 125,
+                orderby: 'time',
+                limit: 300
+            });
+
+            document.getElementById('catalogTableBody').innerHTML =
+                '<tr class="loading-row"><td colspan="8"><i class="fa-solid fa-spinner fa-spin"></i>&nbsp; 正在從 USGS FDSN 取得最新地震資料...</td></tr>';
+            document.getElementById('eventCount').innerText = '資料載入中...';
+            markerLayerGroup.clearLayers();
+
+            try {
+                const res  = await fetch(`${USGS_BASE}?${params}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                allEvents = data.features
+                    .filter(f => f.properties.mag !== null)
+                    .map(f => {
+                        const [lon, lat, depth] = f.geometry.coordinates;
+                        const t = new Date(f.properties.time);
+                        const pad = n => String(n).padStart(2,'0');
+                        return {
+                            id:    f.id,
+                            date:  t.toISOString().substring(0,10),
+                            time:  `${pad(t.getUTCHours())}:${pad(t.getUTCMinutes())}:${pad(t.getUTCSeconds())}`,
+                            ml:    f.properties.mag,
+                            lat, lon, depth,
+                            place: f.properties.place,
+                            url:   f.properties.url
+                        };
+                    });
+
+                renderData(allEvents);
+                const now = new Date().toLocaleString('zh-TW', {hour12:false});
+                document.getElementById('dataSource').innerText = `USGS FDSN · 更新 ${now}`;
+            } catch (err) {
+                document.getElementById('catalogTableBody').innerHTML =
+                    `<tr><td colspan="8" style="text-align:center;color:var(--accent-rose);padding:2rem;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> 載入失敗：${err.message}
+                     </td></tr>`;
+                document.getElementById('eventCount').innerText = '載入失敗';
+            }
+        }
+
+        // ─── 渲染地震清單 & 地圖標記 ────────────────────────────────────────────
         function renderData(events) {
             const tbody = document.getElementById('catalogTableBody');
             tbody.innerHTML = '';
-            
-            // Clear existing markers
-            map.eachLayer(layer => {
-                if (layer instanceof L.CircleMarker) {
-                    map.removeLayer(layer);
-                }
-            });
+            markerLayerGroup.clearLayers();
+
+            if (events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem;">查無符合條件的地震事件</td></tr>';
+                document.getElementById('eventCount').innerText = '0 筆事件';
+                return;
+            }
 
             events.forEach(ev => {
-                // Table Row
+                // ── 規模分級 CSS
+                const mlClass = ev.ml >= 5.5 ? 'ml-high' : (ev.ml >= 4.5 ? 'ml-mid' : 'ml-low');
+
+                // ── Python gdms_client.py 下載指令
+                const gdmsStart = `${ev.date}T${ev.time}`;
+
+                // ── 表格列
                 const tr = document.createElement('tr');
-                const mlClass = ev.ml >= 4.5 ? 'ml-high' : (ev.ml >= 4.2 ? 'ml-mid' : 'ml-low');
-                
+                const safeId    = ev.id.replace(/'/g,"'");
+                const safeDate  = ev.date;
+                const safeTime  = ev.time;
+                const safeMl    = ev.ml.toFixed(1);
+                const safeLat   = ev.lat.toFixed(3);
+                const safeLon   = ev.lon.toFixed(3);
+                const safeDepth = ev.depth.toFixed(1);
+                const safeUrl   = ev.url || '#';
+
                 tr.innerHTML = `
-                    <td><strong>#${ev.id}</strong></td>
-                    <td>${ev.date}</td>
-                    <td>${ev.time}</td>
-                    <td><span class="badge-ml ${mlClass}">ML ${ev.ml.toFixed(2)}</span></td>
-                    <td>${ev.depth}</td>
-                    <td>${ev.lat.toFixed(4)}</td>
-                    <td>${ev.lon.toFixed(4)}</td>
+                    <td style="font-family:'JetBrains Mono',monospace; font-size:0.72rem;">${safeId.length > 14 ? safeId.substring(0,14) + '…' : safeId}</td>
+                    <td>${safeDate}</td>
+                    <td style="font-family:'JetBrains Mono',monospace; font-size:0.78rem;">${safeTime}</td>
+                    <td><span class="badge-ml ${mlClass}">M${safeMl}</span></td>
+                    <td>${safeDepth} km</td>
+                    <td>${safeLat}°N</td>
+                    <td>${safeLon}°E</td>
+                    <td>
+                        <button class="btn-dl" title="下載 CWASN 波形"
+                            data-id="${safeId}" data-date="${safeDate}" data-time="${safeTime}"
+                            data-ml="${safeMl}" data-lat="${safeLat}" data-lon="${safeLon}"
+                            data-depth="${safeDepth}" data-url="${safeUrl}">
+                            <i class="fa-solid fa-download"></i> 波形
+                        </button>
+                        <a class="btn-dl btn-usgs" href="${safeUrl}" target="_blank" title="USGS 詳情">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </td>
                 `;
                 tbody.appendChild(tr);
 
-                // Map Marker
-                const markerColor = ev.ml >= 4.5 ? '#f43f5e' : (ev.ml >= 4.2 ? '#f59e0b' : '#38bdf8');
+                // ── 地圖圓形標記
+                const markerColor = ev.ml >= 5.5 ? '#f43f5e' : (ev.ml >= 4.5 ? '#f59e0b' : '#38bdf8');
+                const radius = Math.min(28, Math.max(6, (ev.ml - 2.5) * 5));
                 const circle = L.circleMarker([ev.lat, ev.lon], {
-                    radius: (ev.ml - 3.5) * 8,
-                    color: markerColor,
-                    fillColor: markerColor,
-                    fillOpacity: 0.6,
-                    weight: 2
-                }).addTo(map);
-
+                    radius, color: markerColor, fillColor: markerColor,
+                    fillOpacity: 0.65, weight: 2
+                });
                 circle.bindPopup(`
-                    <div style="color:#0f172a; font-family:sans-serif;">
-                        <h4 style="margin:0 0 5px; color:#0284c7;"><strong>地震事件 #${ev.id}</strong></h4>
-                        <p style="margin:2px 0;"><b>發震時間:</b> ${ev.date} ${ev.time}</p>
-                        <p style="margin:2px 0;"><b>地震規模:</b> ML ${ev.ml}</p>
-                        <p style="margin:2px 0;"><b>震源深度:</b> ${ev.depth} km</p>
-                        <p style="margin:2px 0;"><b>座標:</b> ${ev.lat}°N, ${ev.lon}°E</p>
+                    <div style="font-family:sans-serif; min-width:210px;">
+                        <h4 style="margin:0 0 6px; color:#0284c7; font-size:0.9rem;">${safeId}</h4>
+                        <p style="margin:3px 0; font-size:0.82rem;"><b>時間:</b> ${safeDate} ${safeTime} UTC</p>
+                        <p style="margin:3px 0; font-size:0.82rem;"><b>規模:</b> M${safeMl}</p>
+                        <p style="margin:3px 0; font-size:0.82rem;"><b>深度:</b> ${safeDepth} km</p>
+                        <p style="margin:3px 0; font-size:0.82rem;"><b>位置:</b> ${ev.place || '台灣附近'}</p>
+                        <p style="margin:3px 0; font-size:0.82rem;"><b>座標:</b> ${safeLat}°N, ${safeLon}°E</p>
+                        <hr style="border-color:#e2e8f020; margin:8px 0;">
+                        <button onclick="triggerDownload('${safeId}','${safeDate}','${safeTime}','${safeMl}','${safeLat}','${safeLon}','${safeDepth}','${safeUrl}')"
+                            style="background:linear-gradient(135deg,#38bdf8,#3b82f6); border:none; color:#fff;
+                                   padding:6px 14px; border-radius:8px; cursor:pointer; width:100%; font-size:0.82rem;">
+                            <i class='fa-solid fa-download'></i> 下載 CWASN 波形
+                        </button>
                     </div>
                 `);
+                markerLayerGroup.addLayer(circle);
             });
 
-            document.getElementById('eventCount').innerText = `已載入 ${events.length} 筆地震事件`;
+            document.getElementById('eventCount').innerText = `共 ${events.length} 筆地震事件`;
+
+            // 委派事件：table 下載按鈕
+            tbody.querySelectorAll('.btn-dl[data-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    triggerDownload(
+                        btn.dataset.id, btn.dataset.date, btn.dataset.time,
+                        btn.dataset.ml,  btn.dataset.lat,  btn.dataset.lon,
+                        btn.dataset.depth, btn.dataset.url
+                    );
+                });
+            });
         }
 
-        renderData(juneEvents);
+        // ─── 開啟下載彈窗 ────────────────────────────────────────────────────────
+        function triggerDownload(id, date, time, ml, lat, lon, depth, url) {
+            document.getElementById('dlEventId').innerText = id;
+            document.getElementById('dlTime').innerText    = `${date} ${time} UTC`;
+            document.getElementById('dlMag').innerText     = `M ${parseFloat(ml).toFixed(1)}`;
+            document.getElementById('dlDepth').innerText   = `${parseFloat(depth).toFixed(1)} km`;
 
-        // Filter Action
-        document.getElementById('btnQuery').addEventListener('click', () => {
-            const minMl = parseFloat(document.getElementById('minMl').value) || 0;
-            const maxMl = parseFloat(document.getElementById('maxMl').value) || 10;
-            
-            const filtered = juneEvents.filter(ev => ev.ml >= minMl && ev.ml <= maxMl);
-            renderData(filtered);
+            const gdmsStart = `${date}T${time}`;
+            const pyCmd = `python gdms_client.py download \\
+  --network CWASN \\
+  --start "${gdmsStart}" \\
+  --duration 300`;
+            document.getElementById('dlPyCmd').textContent = pyCmd;
+
+            document.getElementById('dlUsgsLink').href = url || '#';
+
+            currentEventUrl = url || '#';
+            document.getElementById('downloadModal').style.display = 'flex';
+        }
+
+        function closeDownloadModal() {
+            document.getElementById('downloadModal').style.display = 'none';
+        }
+
+        async function copyPyCmd() {
+            const cmd = document.getElementById('dlPyCmd').textContent;
+            try {
+                await navigator.clipboard.writeText(cmd);
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> 已複製！';
+                setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-copy"></i> 複製指令'; }, 2000);
+            } catch(e) {
+                alert('複製失敗，請手動選取指令文字複製。');
+            }
+        }
+
+        // ─── 按鈕事件 ───────────────────────────────────────────────────────────
+        document.getElementById('btnQuery').addEventListener('click', fetchUSGS);
+
+        // ─── 頁面載入：自動設定預設日期（近 30 天）並即時查詢 ────────────────────
+        window.addEventListener('load', () => {
+            const now = new Date();
+            const end = now.toISOString().substring(0, 10);
+            const startTs = new Date(now - 30 * 24 * 3600 * 1000);
+            const start   = startTs.toISOString().substring(0, 10);
+            document.getElementById('stdate').value = start;
+            document.getElementById('eddate').value = end;
+            document.getElementById('minMl').value  = '4.0';
+            document.getElementById('maxMl').value  = '9.9';
+            document.getElementById('minDep').value = '0';
+            document.getElementById('maxDep').value = '300';
+            fetchUSGS();
         });
 
-        document.getElementById('btnDownloadMseed').addEventListener('click', () => {
-            alert("正在觸發 CWASN 樣品波形檔案下載 (20260501123955_CWASN.mseed - 137.1 MB)");
-        });
-
-        // Animated Waveform Canvas
+        // ─── Animated Waveform Canvas ────────────────────────────────────────────
         const canvas = document.getElementById('waveformCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx    = canvas.getContext('2d');
 
         function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth - 48;
+            canvas.width  = canvas.parentElement.clientWidth - 48;
             canvas.height = 180;
         }
-
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
@@ -712,42 +1062,31 @@
             ctx.fillStyle = '#070a12';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Grid Lines
             ctx.strokeStyle = 'rgba(36, 50, 82, 0.4)';
             ctx.lineWidth = 1;
-
             ctx.beginPath();
             ctx.moveTo(0, canvas.height / 2);
             ctx.lineTo(canvas.width, canvas.height / 2);
             ctx.stroke();
 
-            // Draw Seismic Waveform
             ctx.beginPath();
             ctx.strokeStyle = '#38bdf8';
             ctx.lineWidth = 1.8;
-
             const midY = canvas.height / 2;
-            const width = canvas.width;
-
-            for (let x = 0; x < width; x++) {
+            for (let x = 0; x < canvas.width; x++) {
                 const t = (x + phase) * 0.02;
-                // Envelope simulating P-wave and S-wave arrival
                 let amp = Math.sin(t * 0.5) * 5;
-                if (x > width * 0.3 && x < width * 0.7) {
-                    const envelope = Math.sin((x - width * 0.3) / (width * 0.4) * Math.PI);
-                    amp += Math.sin(t * 8) * 35 * envelope + Math.cos(t * 18) * 20 * envelope;
+                if (x > canvas.width * 0.3 && x < canvas.width * 0.7) {
+                    const env = Math.sin((x - canvas.width * 0.3) / (canvas.width * 0.4) * Math.PI);
+                    amp += Math.sin(t * 8) * 35 * env + Math.cos(t * 18) * 20 * env;
                 }
-
-                const y = midY + amp;
-                if (x === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if (x === 0) ctx.moveTo(x, midY + amp);
+                else         ctx.lineTo(x, midY + amp);
             }
             ctx.stroke();
-
             phase += 2;
             requestAnimationFrame(drawWaveform);
         }
-
         drawWaveform();
     </script>
 </body>
